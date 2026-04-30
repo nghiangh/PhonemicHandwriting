@@ -9,39 +9,8 @@ from typing import List
 from vocabs.utils import analyse_Vietnamese, compose_word
 from typing import *
 
-def preprocess_sentence(sentence: str):
-    sentence = sentence.lower()
-    sentence = unicodedata.normalize("NFD", sentence)
-    sentence = re.sub(r"\s+", " ", sentence)
-    sentence = re.sub(r"!", " ! ", sentence)
-    sentence = re.sub(r"\?", " ? ", sentence)
-    sentence = re.sub(r":", " : ", sentence)
-    sentence = re.sub(r";", " ; ", sentence)
-    sentence = re.sub(r",", " , ", sentence)
-    sentence = re.sub(r"\"", " \" ", sentence)
-    sentence = re.sub(r"'", " ' ", sentence)
-    sentence = re.sub(r"\(", " ( ", sentence)
-    sentence = re.sub(r"\[", " [ ", sentence)
-    sentence = re.sub(r"\)", " ) ", sentence)
-    sentence = re.sub(r"\]", " ] ", sentence)
-    sentence = re.sub(r"/", " / ", sentence)
-    sentence = re.sub(r"\.", " . ", sentence)
-    sentence = re.sub(r"-", " - ", sentence)
-    sentence = re.sub(r"\$", " $ ", sentence)
-    sentence = re.sub(r"\&", " & ", sentence)
-    sentence = re.sub(r"\*", " * ", sentence)
-    sentence = re.sub(r"%", " % ", sentence)
-    sentence = re.sub(r"<nl>", " <nl> ", sentence) # new line mark
-
-    sentence = " ".join(sentence.strip().split()) # remove duplicated spaces
-    tokens = sentence.strip().split()
-
-    return tokens
-
 class ViPhoNER:
     def __init__(self, config):
-        self.tokenizer = config.TOKENIZER
-
         self.initialize_special_tokens(config)
         
         phonemes = self.make_vocab(config)
@@ -73,58 +42,51 @@ class ViPhoNER:
 
     def make_vocab(self, config):
         # Lấy list đường dẫn từ config (Đã sửa ở bước trước)
-        json_paths = [config.TRAIN, config.DEV, config.TEST]
         phonemes = set()
         self.max_sentence_length = 0
         # Collect token stats from each JSON
-        for path in json_paths:
+        for path in config.annotation_paths:
             if not os.path.exists(path):
                 raise FileNotFoundError(f"JSON path not found: {path}")
             
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            for key in data:
-                item = data[key]
-                raw_source = item["source"]
-                if isinstance(raw_source, dict):
-                    paragraphs = [" ".join(p) for _, p in raw_source.items()]
-                    source_text = " ".join(paragraphs)
-                else:
-                    source_text = str(raw_source)
-
-                target_text = item.get("target", "")
-                
-                full_text = source_text + " " + target_text
-                
-
-                words = preprocess_sentence(full_text)
-                
+            for id in data:
+                text: str = data[id]
+                words = text.split()
                 for word in words:
                     components = analyse_Vietnamese(word)
                     if components:
                         phonemes.update([phoneme for phoneme in components if phoneme])
+                    else:
+                        phonemes.add(word)
 
-                target_text = preprocess_sentence(target_text)
-                if self.max_sentence_length < len(target_text):
-                    self.max_sentence_length = len(target_text)
+                if self.max_sentence_length < len(words):
+                    self.max_sentence_length = len(words)
 
         return phonemes
 
-    def encode(self, sentence: List[str]) -> torch.Tensor:
+    def encode(self, sentence: str) -> torch.Tensor:
         syllables = [
             (self.bos_idx, self.bos_idx, self.bos_idx)
         ]
-        for word in sentence:
+        words = sentence.split()
+        for word in words:
             components = analyse_Vietnamese(word)
             if components:
                 syllables.append([
-                    self.stoi[phoneme] if phoneme else self.pad_idx for phoneme in components
+                    self.stoi[phoneme] if phoneme else self.unk_idx for phoneme in components
                 ])
             else:
-                syllables.append(
-                    (self.unk_idx, self.unk_idx, self.unk_idx)
-                )
+                if word in self.stoi:
+                    syllables.append(
+                        (self.stoi[word], ) * 3
+                    )
+                else:
+                    syllables.append(
+                        (self.unk_idx, self.unk_idx, self.unk_idx)
+                    )
 
         syllables.append(
             (self.eos_idx, self.eos_idx, self.eos_idx)
@@ -192,5 +154,3 @@ class ViPhoNER:
         ]
 
         return captions
-    
-

@@ -1,0 +1,33 @@
+vocab:
+  pad_token: "<pad>"
+  bos_token: "<bos>"
+  eos_token: "<eos>"
+  unk_token: "<unk>"
+  annotation_paths: 
+    - data/UIT_HWDB_line/train.json
+    - data/UIT_HWDB_line/test.json
+
+dataset:
+  train:
+    annotation_path: data/UIT_HWDB_line/train.json
+    feature_path: data/UIT_HWDB_line/features_line/train
+  test:
+    annotation_path: data/UIT_HWDB_line/test.json
+    feature_path: data/UIT_HWDB_line/features_line/test
+
+engine:
+  batch_size: 64
+  lr: 0.01
+  warmup: 2000
+
+model:
+  encoder:
+    d_model: 512
+    num_layers: 3
+    dim_ffw: 2048
+    dropout: 0.1
+  decoder:
+    d_model: 512
+    num_layers: 3
+    dim_ffw: 2048
+    dropout: 0.1

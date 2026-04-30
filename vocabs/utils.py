@@ -515,7 +515,7 @@ def compose_word(initial: str, rhyme: str, tone: str) -> tuple[str, None]:
     return word
 
 def convert_Vietnamese_to_IPA(syllable: str) -> list[str]:
-    assert re.search(r"\s+", syllable) is None, "The input must be a syllable"
+    assert re.search(r"\s+", syllable) is None, f"The input must be a syllable, received '{syllable}'"
 
     onset2ipa = {
         None: None,
