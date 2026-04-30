@@ -10,10 +10,10 @@ vocab:
 dataset:
   train:
     annotation_path: data/UIT_HWDB_line/train.json
-    feature_path: data/UIT_HWDB_line/features_line/train
+    feature_path: data/UIT_HWDB_line/features/train
   test:
     annotation_path: data/UIT_HWDB_line/test.json
-    feature_path: data/UIT_HWDB_line/features_line/test
+    feature_path: data/UIT_HWDB_line/features/test
 
 engine:
   batch_size: 64
