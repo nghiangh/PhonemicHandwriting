@@ -39,21 +39,26 @@ class PhonemicTransformer(nn.Module):
 
         self.MAX_LENGTH = vocab.max_sentence_length + 2
 
+        self.img_feat_proj = nn.Linear(
+            in_features=config.d_feat,
+            out_features=config.d_model
+        )
+
         # Embedding
-        self.embedder = nn.Embedding(vocab.vocab_size, config.d_model, padding_idx=self.src_pad_idx)
+        self.embedder = nn.Embedding(vocab.size(), config.d_model, padding_idx=self.pad_idx)
 
         # Positional encoding
         self.pos_encoding = PositionalEncoding(config.d_model, config.max_len)
         
         # Dropout for embeddings
-        self.dropout = nn.Dropout(config.drop_prob)
+        self.dropout = nn.Dropout(config.dropout)
 
         # Encoder
         self.encoder = nn.TransformerEncoder(nn.TransformerEncoderLayer(
             d_model=config.d_model,
             nhead=config.n_head,
-            dim_feedforward=config.ffn_hidden,
-            dropout=config.drop_prob,
+            dim_feedforward=config.dim_ffw,
+            dropout=config.dropout,
             batch_first=True
         ), num_layers=config.n_layers)
 
@@ -65,23 +70,26 @@ class PhonemicTransformer(nn.Module):
         self.decoder = nn.TransformerDecoder(nn.TransformerDecoderLayer(
             d_model=config.d_model,
             nhead=config.n_head,
-            dim_feedforward=config.ffn_hidden,
-            dropout=config.drop_prob,
+            dim_feedforward=config.dim_ffw,
+            dropout=config.dropout,
             batch_first=True
         ), num_layers=config.n_layers)
 
         # Output projection
-        self.output_layer = nn.Linear(config.d_model, vocab.vocab_size*3)
-        # self.output_v = nn.Linear(config.d_model, vocab.vocab_size)
-        # self.output_t = nn.Linear(config.d_model, vocab.vocab_size)
+        self.output_layer = nn.Linear(config.d_model, vocab.size()*3)
+        # self.output_v = nn.Linear(config.d_model, vocab_size)
+        # self.output_t = nn.Linear(config.d_model, vocab_size)
 
-        self.loss = nn.CrossEntropyLoss(label_smoothing=config.label_smoothing, ignore_index=self.trg_pad_idx)
+        self.loss = nn.CrossEntropyLoss(ignore_index=self.pad_idx)
 
-    def make_src_padding_mask(self, src, value=0):
+    def make_src_padding_mask(self, src: torch.Tensor, value=0):
+        if src.dim() == 3:
+            src = src.mean(dim=-1)
         return (src == value)  # [B, L]
 
-    def make_tgt_mask(self, tgt, value=0):
-        tgt = tgt[:, :, 0] # tgt: (bs, len, 3)
+    def make_tgt_mask(self, tgt: torch.Tensor, value=0):
+        if tgt.dim() == 3:
+            tgt = tgt.float().mean(dim=-1)
         _, T = tgt.size()
 
         # Padding mask
@@ -102,14 +110,14 @@ class PhonemicTransformer(nn.Module):
         tgt_padding, tgt_causal = self.make_tgt_mask(tgt_input, value=self.pad_idx)
 
         # Embedding + Positional encoding
-        src_emb = self.src_embedding(src) * math.sqrt(self.d_model)
+        src_emb = self.img_feat_proj(src) * math.sqrt(self.d_model)
         src_pos = self.pos_encoding(src_emb)
         enc_input = self.dropout(src_emb + src_pos)
         
         # phonemic Embedding + Positional encoding
+        tgt_emb = self.embedder(tgt_input) * math.sqrt(self.d_model) # (B, L, 3, D)
         B, L, _, _ = tgt_emb.shape
-        tgt_emb = self.trg_embedding(tgt_input) * math.sqrt(self.d_model) # (B, L, 3, D)
-        tgt_emb = tgt_emb.rehape(B, L, -1) # (B, L, 3*D)
+        tgt_emb = tgt_emb.reshape(B, L, -1) # (B, L, 3*D)
         tgt_emb = self.phonemic_fc(tgt_emb) # (B, L, D)
         tgt_pos = self.pos_encoding(tgt_emb)
         dec_input = self.dropout(tgt_emb + tgt_pos)
@@ -140,9 +148,10 @@ class PhonemicTransformer(nn.Module):
         # loss = loss_i + loss_v + loss_t
 
         logits = self.output_layer(out) # (B, L, 3*V)
+        logits = logits.reshape(B, L, 3, -1)
         loss = self.loss(logits.reshape(-1, logits.size(-1)), tgt_output.reshape(-1))
 
-        return logits, loss
+        return loss
 
     def predict(self, src: torch.Tensor):
         self.eval()
@@ -151,7 +160,7 @@ class PhonemicTransformer(nn.Module):
     
         # Embedding + Positional encoding
         B = src.size(0)
-        src_emb = self.src_embedding(src) * math.sqrt(self.d_model)
+        src_emb = self.embedder(src) * math.sqrt(self.d_model)
         src_pos = self.pos_encoding(src_emb)
         enc_input = src_emb + src_pos
         
@@ -168,7 +177,7 @@ class PhonemicTransformer(nn.Module):
         
                 # Embedding + Positional encoding
                 B, L, _, _ = tgt_emb.shape
-                tgt_emb = self.trg_embedding(tgt_seq) * math.sqrt(self.d_model) # (B, L, 3, D)
+                tgt_emb = self.embedder(tgt_seq) * math.sqrt(self.d_model) # (B, L, 3, D)
                 tgt_emb = tgt_emb.rehape(B, L, -1) # (B, L, 3*D)
                 tgt_emb = self.phonemic_fc(tgt_emb) # (B, L, D)
                 tgt_pos = self.pos_encoding(tgt_emb)

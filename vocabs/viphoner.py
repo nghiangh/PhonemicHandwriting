@@ -1,10 +1,7 @@
 import torch
 
-import re
-import unicodedata
 import os
 import json
-from typing import List
 
 from vocabs.utils import analyse_Vietnamese, compose_word
 from typing import *
@@ -23,6 +20,37 @@ class ViPhoNER:
             tok: i for i, tok in enumerate(self.specials + phonemes)
         }
 
+    def __init__(self, vocab: dict):
+        self.itos = vocab["itos"]
+        self.stoi = vocab["stoi"]
+        self.max_sentence_length = vocab["max_sentence_length"]
+        
+        self.pad_token = vocab["pad"]
+        self.bos_token = vocab["bos"]
+        self.eos_token = vocab["eos"]
+        self.unk_token = vocab["unk"]
+
+        self.pad_idx = self.stoi[self.pad_token]
+        self.bos_idx = self.stoi[self.bos_token]
+        self.eos_idx = self.stoi[self.eos_token]
+        self.unk_idx = self.stoi[self.unk_token]
+
+    def save(self, path: str):
+        json.dump({
+            "stoi": self.stoi,
+            "itos": self.itos,
+            "max_sentence_length": self.max_sentence_length,
+            "pad": self.pad_token,
+            "bos": self.bos_token,
+            "eos": self.eos_token,
+            "unk": self.unk_token
+        }, open(path, "w+"), ensure_ascii=False, indent=4)
+
+    @classmethod
+    def load(self, path):
+        vocab = json.load(open(path))
+        return ViPhoNER(vocab)
+
     def initialize_special_tokens(self, config) -> None:
         self.pad_token = config.pad_token
         self.bos_token = config.bos_token
@@ -36,8 +64,7 @@ class ViPhoNER:
         self.eos_idx = 2
         self.unk_idx = 3
     
-    @property
-    def vocab_size(self) -> int:
+    def size(self) -> int:
         return len(self.stoi)
 
     def make_vocab(self, config):
@@ -60,7 +87,7 @@ class ViPhoNER:
                     if components:
                         phonemes.update([phoneme for phoneme in components if phoneme])
                     else:
-                        phonemes.add(word)
+                        phonemes.update(word)
 
                 if self.max_sentence_length < len(words):
                     self.max_sentence_length = len(words)

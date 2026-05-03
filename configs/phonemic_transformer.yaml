@@ -15,19 +15,20 @@ dataset:
     annotation_path: data/UIT_HWDB_line/test.json
     feature_path: data/UIT_HWDB_line/features/test
 
-engine:
+training:
+  checkpoint_path: checkpoints
   batch_size: 64
   lr: 0.01
   warmup: 2000
+  patient: 10
+  score: WER
 
 model:
-  encoder:
-    d_model: 512
-    num_layers: 3
-    dim_ffw: 2048
-    dropout: 0.1
-  decoder:
-    d_model: 512
-    num_layers: 3
-    dim_ffw: 2048
-    dropout: 0.1
+  d_model: 256
+  d_feat: 2048
+  n_layers: 3
+  n_head: 8
+  dim_ffw: 2048
+  dropout: 0.1
+  device: cuda
+  max_len: 4096
