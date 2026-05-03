@@ -23,6 +23,7 @@ def train(
     ):
     model.train()
 
+    loss_values = []
     with tqdm(dataloader, desc=f"Epoch {epoch} - Training") as pbar:
         for items in pbar:
             # forward pass
@@ -37,9 +38,9 @@ def train(
             optimizer.step()
             lr_scheduler.step()
 
-            loss_value = loss.item()
+            loss_values.append(loss.item())
             pbar.set_postfix({
-                "Loss": loss_value
+                "Loss": np.array(loss_values).mean()
             })
 
 def evaluate(
