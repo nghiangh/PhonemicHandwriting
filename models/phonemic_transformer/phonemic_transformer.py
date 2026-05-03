@@ -192,7 +192,7 @@ class PhonemicTransformer(nn.Module):
         
                 # Get logits for last position
                 B = dec_out.shape[0]
-                V = self.self.size()
+                V = self.vocab.size()
                 logits = self.output_layer(dec_out[:, -1, :])  # [B, 3*V]
                 logits = logits.reshape(B, 3, V)
                 next_token = logits.argmax(dim=-1).unsqueeze(1)
