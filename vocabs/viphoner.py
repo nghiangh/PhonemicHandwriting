@@ -21,7 +21,7 @@ class ViPhoNER:
         }
 
     def __init__(self, vocab: dict):
-        self.itos = vocab["itos"]
+        self.itos = {int(i): s for i, s in vocab["itos"].items()}
         self.stoi = vocab["stoi"]
         self.max_sentence_length = vocab["max_sentence_length"]
         
@@ -34,6 +34,8 @@ class ViPhoNER:
         self.bos_idx = self.stoi[self.bos_token]
         self.eos_idx = self.stoi[self.eos_token]
         self.unk_idx = self.stoi[self.unk_token]
+
+        self.specials = [self.pad_token, self.bos_token, self.eos_token, self.unk_token]
 
     def save(self, path: str):
         json.dump({
@@ -177,7 +179,7 @@ class ViPhoNER:
     def decode_batch(self, batch: torch.Tensor, join_words=True):
         assert batch.dim() == 3
         captions = [
-            self.decode_caption(caption_vec, join_words) for caption_vec in batch
+            self.decode(vec, join_words) for vec in batch
         ]
 
         return captions

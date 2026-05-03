@@ -160,7 +160,7 @@ class PhonemicTransformer(nn.Module):
     
         # Embedding + Positional encoding
         B = src.size(0)
-        src_emb = self.embedder(src) * math.sqrt(self.d_model)
+        src_emb = self.img_feat_proj(src) * math.sqrt(self.d_model)
         src_pos = self.pos_encoding(src_emb)
         enc_input = src_emb + src_pos
         
