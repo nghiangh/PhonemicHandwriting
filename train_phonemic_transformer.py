@@ -51,7 +51,7 @@ def evaluate(
 ) -> dict:
     cer_scores = []
     wer_scores = []
-    with tqdm(dataloader, desc=f"Epoch {epoch} - Training") as pbar:
+    with tqdm(dataloader, desc=f"Epoch {epoch} - Evaluating") as pbar:
         for items in pbar:
             # forward pass
             items = items.to(device)

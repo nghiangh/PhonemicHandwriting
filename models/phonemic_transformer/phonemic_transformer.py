@@ -192,16 +192,16 @@ class PhonemicTransformer(nn.Module):
         
                 # Get logits for last position
                 B = dec_out.shape[0]
-                V = len(self.vocab)
+                V = self.self.size()
                 logits = self.output_layer(dec_out[:, -1, :])  # [B, 3*V]
                 logits = logits.reshape(B, 3, V)
-                next_token = logits.argmax(dim=-1, keepdim=True)
+                next_token = logits.argmax(dim=-1).unsqueeze(1)
         
                 # Append next token
                 tgt_seq = torch.cat([tgt_seq, next_token], dim=1)
         
                 # Check if finished
-                finished |= (next_token.squeeze(1) == self.eos_idx)
+                finished = torch.where(next_token.squeeze(1).sum(-1) == 3*self.eos_idx, 1, 0)
         
                 if finished.all():
                     break
