@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
     if os.path.isfile(os.path.join(configs.training.checkpoint_path, "vocab.json")):
         logger.info("Loading the vocabulary")
-        vocab = ViPhoNER.load(os.path.join(configs.training.checkpoint_path, "vocab.json"))
+        vocab = ViPhoNER.load(os.path.join(configs.training.checkpoint_path, "vocab.json"), configs)
     else:
         logger.info("Initializing the vocabulary")
         vocab = ViPhoNER(config=configs.vocab)
