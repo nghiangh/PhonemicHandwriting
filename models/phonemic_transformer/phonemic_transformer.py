@@ -178,7 +178,7 @@ class PhonemicTransformer(nn.Module):
                 # Embedding + Positional encoding
                 tgt_emb = self.embedder(tgt_seq) * math.sqrt(self.d_model) # (B, L, 3, D)
                 B, L, _, _ = tgt_emb.shape
-                tgt_emb = tgt_emb.rehape(B, L, -1) # (B, L, 3*D)
+                tgt_emb = tgt_emb.reshape(B, L, -1) # (B, L, 3*D)
                 tgt_emb = self.phonemic_fc(tgt_emb) # (B, L, D)
                 tgt_pos = self.pos_encoding(tgt_emb)
                 dec_input = self.dropout(tgt_emb + tgt_pos)
