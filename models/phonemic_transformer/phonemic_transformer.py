@@ -169,7 +169,7 @@ class PhonemicTransformer(nn.Module):
             memory = self.encoder(enc_input, src_key_padding_mask=src_key_padding)
         
             # Start with BOS
-            tgt_seq = torch.full((B, 1, 3), self.trg_bos_idx, device=src.device, dtype=torch.long)
+            tgt_seq = torch.full((B, 1, 3), self.bos_idx, device=src.device, dtype=torch.long)
             finished = torch.zeros(B, dtype=torch.bool, device=src.device)
         
             for _ in range(self.MAX_LENGTH):
@@ -201,7 +201,7 @@ class PhonemicTransformer(nn.Module):
                 tgt_seq = torch.cat([tgt_seq, next_token], dim=1)
         
                 # Check if finished
-                finished |= (next_token.squeeze(1) == self.trg_eos_idx)
+                finished |= (next_token.squeeze(1) == self.eos_idx)
         
                 if finished.all():
                     break
