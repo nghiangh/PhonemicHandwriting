@@ -20,23 +20,6 @@ class ViPhoNER:
             tok: i for i, tok in enumerate(self.specials + phonemes)
         }
 
-    def __init__(self, vocab: dict):
-        self.itos = {int(i): s for i, s in vocab["itos"].items()}
-        self.stoi = vocab["stoi"]
-        self.max_sentence_length = vocab["max_sentence_length"]
-        
-        self.pad_token = vocab["pad"]
-        self.bos_token = vocab["bos"]
-        self.eos_token = vocab["eos"]
-        self.unk_token = vocab["unk"]
-
-        self.pad_idx = self.stoi[self.pad_token]
-        self.bos_idx = self.stoi[self.bos_token]
-        self.eos_idx = self.stoi[self.eos_token]
-        self.unk_idx = self.stoi[self.unk_token]
-
-        self.specials = [self.pad_token, self.bos_token, self.eos_token, self.unk_token]
-
     def save(self, path: str):
         json.dump({
             "stoi": self.stoi,
@@ -49,9 +32,27 @@ class ViPhoNER:
         }, open(path, "w+"), ensure_ascii=False, indent=4)
 
     @classmethod
-    def load(self, path):
+    def load(cls, path, config):
+        viphoner = ViPhoNER(config)
         vocab = json.load(open(path))
-        return ViPhoNER(vocab)
+
+        viphoner.itos = {int(i): s for i, s in vocab["itos"].items()}
+        viphoner.stoi = vocab["stoi"]
+        viphoner.max_sentence_length = vocab["max_sentence_length"]
+        
+        viphoner.pad_token = vocab["pad"]
+        viphoner.bos_token = vocab["bos"]
+        viphoner.eos_token = vocab["eos"]
+        viphoner.unk_token = vocab["unk"]
+
+        viphoner.pad_idx = viphoner.stoi[viphoner.pad_token]
+        viphoner.bos_idx = viphoner.stoi[viphoner.bos_token]
+        viphoner.eos_idx = viphoner.stoi[viphoner.eos_token]
+        viphoner.unk_idx = viphoner.stoi[viphoner.unk_token]
+
+        viphoner.specials = [viphoner.pad_token, viphoner.bos_token, viphoner.eos_token, viphoner.unk_token]
+        
+        return viphoner
 
     def initialize_special_tokens(self, config) -> None:
         self.pad_token = config.pad_token
