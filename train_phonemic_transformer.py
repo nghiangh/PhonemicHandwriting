@@ -148,6 +148,8 @@ if __name__ == "__main__":
             vocab=vocab
         )
 
+        logger.info("Evaluated scores: ", scores)
+
         main_score = scores[configs.training.score]
         if main_score < current_score:
             main_score = current_score
