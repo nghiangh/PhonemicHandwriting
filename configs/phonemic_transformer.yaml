@@ -18,7 +18,7 @@ dataset:
 training:
   checkpoint_path: checkpoints
   batch_size: 32
-  lr: 0.01
+  lr: 0.5
   warmup: 2000
   patient: 10
   score: WER

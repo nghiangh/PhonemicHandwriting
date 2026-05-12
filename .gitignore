@@ -2,3 +2,4 @@ data
 examine*.py
 
 *.pyc
+checkpoints

@@ -75,8 +75,8 @@ def evaluate(
                 wer_scores.append(wer_score)
 
     return {
-        "WER": np.array(wer_scores).mean(),
-        "CER": np.array(cer_scores).mean(),
+        "WER": np.array(wer_scores).mean().item(),
+        "CER": np.array(cer_scores).mean().item(),
     }
 
 def lambda_lr(step, warmup):
