@@ -31,4 +31,4 @@ model:
   dim_ffw: 2048
   dropout: 0.1
   device: cuda
-  max_len: 4096
+  max_len: 2048

@@ -78,7 +78,6 @@ def evaluate(
         "WER": np.array(wer_scores).mean(),
         "CER": np.array(cer_scores).mean(),
     }
-            
 
 def lambda_lr(step, warmup):
         warm_up = warmup
@@ -97,7 +96,7 @@ if __name__ == "__main__":
 
     if os.path.isfile(os.path.join(configs.training.checkpoint_path, "vocab.json")):
         logger.info("Loading the vocabulary")
-        vocab = ViPhoNER.load(os.path.join(configs.training.checkpoint_path, "vocab.json"), configs)
+        vocab = ViPhoNER.load(os.path.join(configs.training.checkpoint_path, "vocab.json"), configs.vocab)
     else:
         logger.info("Initializing the vocabulary")
         vocab = ViPhoNER(config=configs.vocab)
