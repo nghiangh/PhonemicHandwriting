@@ -50,7 +50,7 @@ class ViPhoNER:
         viphoner.eos_idx = viphoner.stoi[viphoner.eos_token]
         viphoner.unk_idx = viphoner.stoi[viphoner.unk_token]
 
-        viphoner.specials = [viphoner.pad_token, viphoner.bos_token, viphoner.eos_token, viphoner.unk_token]
+        viphoner.specials = [viphoner.unk_token, viphoner.pad_token, viphoner.bos_token, viphoner.eos_token]
         
         return viphoner
 
@@ -60,12 +60,12 @@ class ViPhoNER:
         self.eos_token = config.eos_token
         self.unk_token = config.unk_token
         
-        self.specials = [self.pad_token, self.bos_token, self.eos_token, self.unk_token]
+        self.specials = [self.bos_token, self.eos_token, self.unk_token, self.pad_token]
 
-        self.pad_idx = 0
-        self.bos_idx = 1
-        self.eos_idx = 2
-        self.unk_idx = 3
+        self.unk_idx = 0
+        self.pad_idx = 1
+        self.bos_idx = 2
+        self.eos_idx = 3
     
     def size(self) -> int:
         return len(self.stoi)

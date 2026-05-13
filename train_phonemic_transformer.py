@@ -98,7 +98,7 @@ if __name__ == "__main__":
         logger.info("Loading the vocabulary")
         vocab = ViPhoNER.load(os.path.join(configs.training.checkpoint_path, "vocab.json"), configs.vocab)
     else:
-        logger.info("Initializing the vocabulary")
+        logger.info("Creating the vocabulary")
         vocab = ViPhoNER(config=configs.vocab)
         vocab.save(os.path.join(configs.training.checkpoint_path, "vocab.json"))
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     train_dataset = UitHwdbDataset(config=configs.dataset.train, vocab=vocab)
     train_dataloader = DataLoader(
         dataset=train_dataset,
-        batch_size=64,
+        batch_size=configs.training.batch_size,
         collate_fn=lambda samples: collate_fn(samples, vocab)
     )
 
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     test_dataset = UitHwdbDataset(config=configs.dataset.test, vocab=vocab)
     test_dataloader = DataLoader(
         dataset=test_dataset,
-        batch_size=64,
+        batch_size=configs.training.batch_size,
         collate_fn=lambda samples: collate_fn(samples, vocab)
     )
 
